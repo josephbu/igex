@@ -6,6 +6,9 @@
  * Supports password protection, EXIF metadata display, and automatic
  * thumbnail generation. Expects photos to be organized in:
  * PHOTO_ROOT/YYYY/MM/[originals|previews|thumbs|meta]/
+ * 
+ * @author JB
+ * @version 1.1
  */
 
 require_once 'config.php';

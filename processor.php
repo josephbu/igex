@@ -13,8 +13,8 @@
  * 
  * Supported formats: JPEG, PNG, HEIC/HEIF
  * 
- * @author Your Name
- * @version 1.0
+ * @author JB
+ * @version 1.1
  */
 
 require_once 'config.php';
