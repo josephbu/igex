@@ -1,14 +1,46 @@
 <?php
+/**
+ * Image Processor for Image Gallery EXpress
+ * 
+ * This script processes original images from a directory structure and creates
+ * thumbnails, previews, and metadata files for a web photo gallery.
+ * 
+ * Expected directory structure:
+ * - originals/YYYY/MM/filename.ext (source images)
+ * - photos/YYYY/MM/thumbs/filename.jpg (square thumbnails)
+ * - photos/YYYY/MM/previews/filename.jpg (scaled previews)
+ * - photos/YYYY/MM/meta/filename.json (EXIF metadata)
+ * 
+ * Supported formats: JPEG, PNG, HEIC/HEIF
+ * 
+ * @author Your Name
+ * @version 1.0
+ */
+
 require_once 'config.php';
 
+/**
+ * Main image processing class
+ * 
+ * Handles the conversion of original images into web-optimized formats
+ * with proper metadata extraction and directory organization.
+ */
 class ImageProcessor {
 
+    /**
+     * Main entry point - processes all images in the originals directory
+     * 
+     * Recursively scans the ORIGINALS_ROOT directory and processes each
+     * image file found, creating derivatives in the appropriate structure.
+     */
     public function processNewImages() {
+        // Create recursive iterator to scan all subdirectories
         $iterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator(ORIGINALS_ROOT, FilesystemIterator::SKIP_DOTS),
             RecursiveIteratorIterator::LEAVES_ONLY
         );
 
+        // Process each file found
         foreach ($iterator as $file) {
             if ($file->isDir()) continue;
             
@@ -16,17 +48,26 @@ class ImageProcessor {
         }
     }
 
+    /**
+     * Process a single image file
+     * 
+     * Validates the file type, extracts path information, and creates
+     * all derivative images and metadata files.
+     * 
+     * @param SplFileInfo $file The file to process
+     */
     private function processFile(SplFileInfo $file) {
         $source = $file->getPathname();
         $ext = strtolower($file->getExtension());
         
+        // Skip files that aren't allowed image types
         if (!in_array($ext, ALLOWED_TYPES)) {
             error_log("Skipped non-allowed type: $source");
             return;
         }
 
         try {
-            // Get year/month from path: originals/YYYY/MM/filename.ext
+            // Extract year/month from path structure: originals/YYYY/MM/filename.ext
             $relativePath = str_replace(
                 ORIGINALS_ROOT . DIRECTORY_SEPARATOR, 
                 '', 
@@ -34,6 +75,7 @@ class ImageProcessor {
             );
             $pathParts = explode(DIRECTORY_SEPARATOR, $relativePath);
             
+            // Validate path structure
             if (count($pathParts) < 2) {
                 error_log("Invalid path structure: $source");
                 return;
@@ -43,33 +85,61 @@ class ImageProcessor {
             $month = $pathParts[1];
             $filename = pathinfo($source, PATHINFO_FILENAME);
             
+            // Build destination path
             $destBase = PHOTO_ROOT . DIRECTORY_SEPARATOR . $year . DIRECTORY_SEPARATOR . $month . DIRECTORY_SEPARATOR;
             
+            // Create all derivative files
             $this->createDerivatives($source, $destBase, $filename);
         } catch (Exception $e) {
             error_log("Error processing $source: " . $e->getMessage());
         }
     }
 
+    /**
+     * Create all derivative files for an image
+     * 
+     * This is the main processing pipeline that:
+     * 1. Creates output directories
+     * 2. Loads and orients the image
+     * 3. Extracts and saves metadata
+     * 4. Creates thumbnail and preview images
+     * 
+     * @param string $source Source image path
+     * @param string $destBase Destination directory base path
+     * @param string $filename Base filename (without extension)
+     */
     private function createDerivatives($source, $destBase, $filename) {
+        // Create necessary subdirectories
         $this->createDirectories($destBase);
         
+        // Load the source image
         $image = $this->loadImage($source);
         if (!$image) {
             throw new Exception("Failed to load image: $source");
         }
 
-        // Get EXIF data using the proper method
+        // Extract EXIF data and apply orientation correction
         $exif = $this->getExifData($source);
         $image = $this->applyOrientation($image, $exif);
+        
+        // Save metadata to JSON file
         $this->saveMetadata($source, $destBase . 'meta/', $filename, $exif);
 
+        // Create derivative images
         $this->createThumbnail($image, $destBase, $filename);
         $this->createPreview($image, $destBase, $filename);
 
+        // Clean up memory
         imagedestroy($image);
     }
 
+    /**
+     * Create necessary output directories
+     * 
+     * Creates thumbs/, previews/, and meta/ subdirectories if they don't exist.
+     * 
+     * @param string $destBase Base destination path
+     */
     private function createDirectories($destBase) {
         $dirs = ['thumbs', 'previews', 'meta'];
         foreach ($dirs as $dir) {
@@ -80,7 +150,18 @@ class ImageProcessor {
         }
     }
 
+    /**
+     * Safely round numeric values, handling EXIF fraction format
+     * 
+     * EXIF data often contains fractions like "1/60" which need to be
+     * converted to decimal values before rounding.
+     * 
+     * @param mixed $value Value to round (can be fraction string or number)
+     * @param int $precision Number of decimal places
+     * @return float|null Rounded value or null if not numeric
+     */
     private function safeRound($value, $precision = 1) {
+        // Handle EXIF fraction format (e.g., "1/60")
         if (is_string($value) && strpos($value, '/') !== false) {
             list($numerator, $denominator) = explode('/', $value, 2);
             if ($denominator != 0) {
@@ -90,15 +171,26 @@ class ImageProcessor {
         return is_numeric($value) ? round((float)$value, $precision) : null;
     }
 
+    /**
+     * Extract and save image metadata to JSON file
+     * 
+     * Extracts relevant EXIF data including camera info, exposure settings,
+     * and timestamps. Handles both regular EXIF and HEIC metadata formats.
+     * 
+     * @param string $source Source image path
+     * @param string $metaDir Metadata output directory
+     * @param string $filename Base filename
+     * @param array $exif EXIF data array
+     */
     private function saveMetadata($source, $metaDir, $filename, $exif) {
-        // Check if we have HEIC format
+        // Check if we have HEIC format (requires special handling)
         $mime = mime_content_type($source);
         $isHeic = in_array($mime, ['image/heic', 'image/heif']);
     
-        // For HEIC, try both prefixed and non-prefixed keys
+        // Helper function to get EXIF values with HEIC fallbacks
         $getValue = function($key) use ($exif, $isHeic) {
             if ($isHeic) {
-                // Try both prefixed and non-prefixed versions
+                // Try both prefixed and non-prefixed versions for HEIC
                 return $exif[$key] ?? $exif["exif:$key"] ?? null;
             }
             return $exif[$key] ?? null;
@@ -122,6 +214,7 @@ class ImageProcessor {
             $camera = trim(substr($model, strlen($make)));
         }
     
+        // Build metadata array
         $metadata = [
             'datetime' => $datetime,
             'camera' => $camera,
@@ -133,12 +226,22 @@ class ImageProcessor {
             'focal_length' => $focalLength ? $this->safeRound($focalLength) . 'mm' : null
         ];
     
+        // Save to JSON file (filter out null values)
         file_put_contents(
             $metaDir . $filename . '.json',
             json_encode(array_filter($metadata), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
         );
     }
 
+    /**
+     * Load an image from file based on its MIME type
+     * 
+     * Supports JPEG, PNG, and HEIC/HEIF formats. For PNG images,
+     * preserves transparency. For HEIC, uses ImageMagick conversion.
+     * 
+     * @param string $path Path to image file
+     * @return resource|false GD image resource or false on failure
+     */
     private function loadImage($path) {
         $mime = mime_content_type($path);
         switch ($mime) {
@@ -157,6 +260,15 @@ class ImageProcessor {
         }
     }
 
+    /**
+     * Load HEIC/HEIF images using ImageMagick
+     * 
+     * Converts HEIC format to JPEG using ImageMagick, then creates
+     * a GD resource from the converted data.
+     * 
+     * @param string $path Path to HEIC file
+     * @return resource|false GD image resource or false on failure
+     */
     private function loadHeic($path) {
         if (!extension_loaded('imagick')) {
             throw new Exception("Imagick extension not available for HEIC processing");
@@ -174,6 +286,15 @@ class ImageProcessor {
         }
     }
 
+    /**
+     * Extract EXIF data from image file
+     * 
+     * Handles both standard EXIF (for JPEG/PNG) and ImageMagick-based
+     * extraction for HEIC files. Returns a normalized array of metadata.
+     * 
+     * @param string $source Path to image file
+     * @return array EXIF data array
+     */
     private function getExifData($source) {
         $mime = mime_content_type($source);
         
@@ -216,18 +337,38 @@ class ImageProcessor {
         return @exif_read_data($source) ?: [];
     }
 
+    /**
+     * Apply EXIF orientation correction to image
+     * 
+     * Rotates the image based on EXIF orientation data to ensure
+     * proper display orientation in web browsers.
+     * 
+     * @param resource $image GD image resource
+     * @param array $exif EXIF data array
+     * @return resource Oriented image resource
+     */
     private function applyOrientation($image, $exif) {
         $orientation = $exif['Orientation'] ?? $exif['exif:Orientation'] ?? null;
         if ($orientation) {
             switch (intval($orientation)) {
-                case 3: $image = imagerotate($image, 180, 0); break;
-                case 6: $image = imagerotate($image, -90, 0); break;
-                case 8: $image = imagerotate($image, 90, 0); break;
+                case 3: $image = imagerotate($image, 180, 0); break;  // 180°
+                case 6: $image = imagerotate($image, -90, 0); break;  // 90° CW
+                case 8: $image = imagerotate($image, 90, 0); break;   // 90° CCW
             }
         }
         return $image;
     }
 
+    /**
+     * Create square thumbnail image
+     * 
+     * Creates a square thumbnail by cropping the center of the image
+     * and resizing to THUMB_WIDTH x THUMB_WIDTH pixels.
+     * 
+     * @param resource $image Source GD image resource
+     * @param string $destBase Destination directory base path
+     * @param string $filename Base filename
+     */
     private function createThumbnail($image, $destBase, $filename) {
         $width = imagesx($image);
         $height = imagesy($image);
@@ -238,26 +379,46 @@ class ImageProcessor {
         $src_y = (int)(($height - $minDim) / 2);
         $minDim = (int)$minDim;
     
+        // Create square thumbnail
         $thumb = imagecreatetruecolor(THUMB_WIDTH, THUMB_WIDTH);
         imagecopyresampled(
             $thumb, $image,
-            0, 0,
-            $src_x, $src_y,
-            THUMB_WIDTH, THUMB_WIDTH,
-            $minDim, $minDim
+            0, 0,                           // Destination position
+            $src_x, $src_y,                 // Source crop position
+            THUMB_WIDTH, THUMB_WIDTH,       // Destination size
+            $minDim, $minDim                // Source crop size
         );
+        
+        // Save thumbnail
         imagejpeg($thumb, $destBase . 'thumbs/' . $filename . '.jpg', THUMB_QUALITY);
         imagedestroy($thumb);
     }
 
+    /**
+     * Create preview image
+     * 
+     * Creates a web-optimized preview image scaled to PREVIEW_WIDTH
+     * while maintaining aspect ratio.
+     * 
+     * @param resource $image Source GD image resource
+     * @param string $destBase Destination directory base path
+     * @param string $filename Base filename
+     */
     private function createPreview($image, $destBase, $filename) {
+        // Scale image maintaining aspect ratio
         $preview = imagescale($image, PREVIEW_WIDTH);
+        
+        // Save preview
         imagejpeg($preview, $destBase . 'previews/' . $filename . '.jpg', PREVIEW_QUALITY);
         imagedestroy($preview);
     }
 }
 
-// Run processor
+// ============================================================================
+// SCRIPT EXECUTION
+// ============================================================================
+
+// Create processor instance and run
 $processor = new ImageProcessor();
 $processor->processNewImages();
 echo "Processing completed!\n";
