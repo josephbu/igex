@@ -1,7 +1,7 @@
 <?php
 // These are the options that you probably want to update
 define('GALLERY_OWNER', 'Your Name');
-define('GALLERY_TITLE', 'Your Gallery');
+define('GALLERY_TITLE', 'IGEX Gallery');
 define('GALLERY_THEME', 'dark'); // dark or light
 //define('GALLERY_PASSWORD', 'password'); // Uncomment and update if needed
 define('ALLOWED_TYPES', ['jpg', 'jpeg', 'png', 'heic', 'heif']);
