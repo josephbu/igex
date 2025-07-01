@@ -8,7 +8,7 @@
  * PHOTO_ROOT/YYYY/MM/[originals|previews|thumbs|meta]/
  * 
  * @author JB
- * @version 1.1
+ * @version 0.1
  */
 
 require_once 'config.php';
@@ -296,12 +296,15 @@ HTML;
  * @return string Complete HTML document
  */
 function render_gallery($year = null, $month_name = null) {
+    // Get configurable gallery title from config, with fallback
+    $gallery_title = defined('GALLERY_TITLE') ? GALLERY_TITLE : 'Photo Gallery';
+    
     // Generate dynamic title
-    $title = "Photo Gallery";
+    $title = $gallery_title;
     if ($year && $month_name) {
-        $title = "$year - $month_name";
+        $title = "$gallery_title - $year - $month_name";
     } elseif ($year) {
-        $title = $year;
+        $title = "$gallery_title - $year";
     }
     
     ob_start(); ?>
@@ -463,6 +466,13 @@ function render_image_view($year, $month_name, $image) {
     $web_path = photo_root_web_path();
     $preview = $web_path . "/$year/$month_num/previews/" . pathinfo($image, PATHINFO_FILENAME) . ".jpg";
     $back_link = $base . $year . '/' . $month_name;
+    
+    // Get configurable gallery title from config, with fallback
+    $gallery_title = defined('GALLERY_TITLE') ? GALLERY_TITLE : 'Photo Gallery';
+    
+    // Generate page title with gallery title included
+    $page_title = "$gallery_title - $year - $month_name - $image";
+    
     // Format metadata for display
     $date_taken = !empty($metadata['datetime']) ? 
         date('F j, Y H:i', strtotime($metadata['datetime'])) : 'Unknown';
@@ -483,7 +493,7 @@ function render_image_view($year, $month_name, $image) {
     <html lang="en">
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title><?= htmlspecialchars("$year - $month_name - $image") ?></title>
+        <title><?= htmlspecialchars($page_title) ?></title>
         <?= gallery_styles() ?>
         <style>
             body { text-align: center; }

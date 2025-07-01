@@ -14,7 +14,7 @@
  * Supported formats: JPEG, PNG, HEIC/HEIF
  * 
  * @author JB
- * @version 1.1
+ * @version 0.1
  */
 
 require_once 'config.php';
