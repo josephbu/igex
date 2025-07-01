@@ -10,6 +10,7 @@ define('THUMB_WIDTH', 400); // 2x for retina/high-DPI screens
 define('PREVIEW_WIDTH', 1200);
 define('THUMB_QUALITY', 85);   // Default thumb quality (1-100)
 define('PREVIEW_QUALITY', 90); // Default preview quality (1-100)
+define('SHOW_ATTRIBUTION', true); // Set to false to disable link to IGEX
 // Shouldn't need to edit below here
 define('ORIGINALS_ROOT', __DIR__ . '/originals');
 define('PHOTO_ROOT', __DIR__ . '/photos');

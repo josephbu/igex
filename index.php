@@ -280,10 +280,19 @@ function render_footer() {
     ) {
         $logout = '<p><a href="?logout=1">Logout</a></p>';
     }
+    
+    // Check if IGEX attribution should be shown (enabled by default)
+    $show_igex = !defined('SHOW_ATTRIBUTION') || SHOW_ATTRIBUTION;
+    $igex_attribution = '';
+    if ($show_igex) {
+        $igex_attribution = '<p style="font-size:0.8em; color:#666; margin-top:0.5rem;"><a href="https://github.com/josephbu/igex" style="color:#666; text-decoration:none;">Powered by IGEX</a></p>';
+    }
+    
     return <<<HTML
     <footer style="margin-top:2rem; padding:1rem 0; text-align:center; color:#888; font-size:0.95em;">
         &copy; $year. All rights reserved. $owner.
         $logout
+        $igex_attribution
     </footer>
 HTML;
 }
