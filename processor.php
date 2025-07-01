@@ -1,6 +1,7 @@
 <?php
 /**
- * Image Processor for Image Gallery EXpress
+ * Image Processor for Image Gallery EXpress (IGEX)
+ * https://github.com/josephbu/igex
  * 
  * This script processes original images from a directory structure and creates
  * thumbnails, previews, and metadata files for a web photo gallery.

@@ -1,6 +1,7 @@
 <?php
 /**
- * Image Gallery EXpress
+ * Image Gallery EXpress (IGEX)
+ * https://github.com/josephbu/igex
  * 
  * A web-based photo gallery that organizes images by year/month structure.
  * Supports password protection, EXIF metadata display, and automatic
