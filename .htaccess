@@ -1,0 +1,26 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Redirect trailing slashes
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.+)/$ /$1 [L,R=301]
+
+    # Main rewrite rules
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^([0-9]{4})/([a-zA-Z]+)/?$ index.php?year=$1&month=$2 [L,QSA]
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^([0-9]{4})/?$ index.php?year=$1 [L,QSA]
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^([0-9]{4})/([a-zA-Z]+)/([a-zA-Z0-9_\-.]+)$ index.php?year=$1&month=$2&image=$3 [L,QSA]
+</IfModule>
+
+Options -Indexes
+<FilesMatch "\.(ini|log)$">
+    Require all denied
+</FilesMatch>
+
