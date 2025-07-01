@@ -1,6 +1,6 @@
 <?php
 /**
- * Photo Gallery Application
+ * Image Gallery EXpress
  * 
  * A web-based photo gallery that organizes images by year/month structure.
  * Supports password protection, EXIF metadata display, and automatic
