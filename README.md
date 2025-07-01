@@ -34,12 +34,12 @@ The gallery displays photos in a clean grid layout with:
 
 1. **Download and Extract**
    ```bash
-   git clone https://github.com/yourusername/image-gallery-express.git
-   cd image-gallery-express
+   git clone https://github.com/josephbu/igex.git
+   cd igex
    ```
 
 2. **Configure Web Server**
-   - Rename `htaccess.txt` to `.htaccess` (Apache)
+   - Copy `.htaccess` to web root(Apache)
    - Ensure mod_rewrite is enabled
 
 3. **Set Up Directory Structure**
@@ -52,9 +52,10 @@ The gallery displays photos in a clean grid layout with:
    │   │   └── ...
    │   └── 2023/
    ├── photos/             # Generated thumbnails/previews (auto-created)
+   ├── css/                # CSS files here
    ├── config.php          # Configuration file
    ├── processor.php       # Image processing script
-   └── index.php          # Main gallery application
+   └── index.php           # Main gallery application
    ```
 
 4. **Configure Your Gallery**
