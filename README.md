@@ -1,4 +1,4 @@
-# Image Gallery EXpress
+# Image Gallery EXpress (IGEX)
 
 A lightweight, self-hosted PHP photo gallery that automatically organizes your images by year and month. Perfect for photographers and anyone who wants a clean, simple way to showcase their photo collections online.
 
@@ -26,7 +26,7 @@ The gallery displays photos in a clean grid layout with:
 
 ### Requirements
 
-- PHP 7.4+ with GD extension
+- PHP 8.4+ with GD extension
 - Web server (Apache/Nginx) with mod_rewrite
 - Optional: ImageMagick extension for HEIC support
 
@@ -212,13 +212,12 @@ Clean, SEO-friendly URLs:
 ## 📋 Requirements
 
 ### Minimum Requirements
-- PHP 7.4+
+- PHP 8.4+
 - GD extension (usually included)
 - Web server with URL rewriting support
 - File system write permissions
 
 ### Recommended
-- PHP 8.0+
 - ImageMagick extension (for HEIC support)
 - At least 512MB PHP memory limit
 - SSD storage for better performance
