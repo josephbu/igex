@@ -118,20 +118,35 @@ class ImageProcessor {
         if (!$image) {
             throw new Exception("Failed to load image: $source");
         }
-
+    
         // Extract EXIF data and apply orientation correction
         $exif = $this->getExifData($source);
         $image = $this->applyOrientation($image, $exif);
         
         // Save metadata to JSON file
         $this->saveMetadata($source, $destBase . 'meta/', $filename, $exif);
-
+    
         // Create derivative images
         $this->createThumbnail($image, $destBase, $filename);
         $this->createPreview($image, $destBase, $filename);
-
+    
         // Clean up memory
-        imagedestroy($image);
+        $this->destroyImage($image);
+    }
+
+    /**
+     * Clean up image resources
+     * 
+     * Properly destroys both ImageMagick and GD resources
+     * 
+     * @param resource|Imagick $image Image resource or Imagick object
+     */
+    private function destroyImage($image) {
+        if ($image instanceof Imagick) {
+            $image->destroy();
+        } else {
+            imagedestroy($image);
+        }
     }
 
     /**
@@ -235,55 +250,103 @@ class ImageProcessor {
     }
 
     /**
-     * Load an image from file based on its MIME type
+     * Load an image from file, with processor preference
      * 
-     * Supports JPEG, PNG, and HEIC/HEIF formats. For PNG images,
-     * preserves transparency. For HEIC, uses ImageMagick conversion.
+     * Uses the IMAGE_PROCESSOR setting to determine which processor to use.
      * 
      * @param string $path Path to image file
-     * @return resource|false GD image resource or false on failure
+     * @return resource|Imagick|false Image resource/object or false on failure
      */
     private function loadImage($path) {
         $mime = mime_content_type($path);
-        switch ($mime) {
-            case 'image/jpeg':
-                return imagecreatefromjpeg($path);
-            case 'image/png':
-                $img = imagecreatefrompng($path);
-                imagealphablending($img, true);
-                imagesavealpha($img, true);
-                return $img;
-            case 'image/heic':
-            case 'image/heif':
-                return $this->loadHeic($path);                
-            default:
-                return false;
+        $processor = strtolower(IMAGE_PROCESSOR);
+        $isHeic = in_array($mime, ['image/heic', 'image/heif']);
+        
+        // Force ImageMagick if requested
+        if ($processor === 'imagemagick') {
+            return $this->loadImageMagick($path);
         }
+        
+        // Force GD if requested
+        if ($processor === 'gd') {
+            if ($isHeic) {
+                throw new Exception("HEIC/HEIF files are not supported with GD processor. Use 'imagemagick' or 'auto' mode.");
+            }
+            return $this->loadImageGD($path);
+        }
+        
+        // Auto mode - use GD for non-HEIC files (faster), ImageMagick for HEIC
+        if ($isHeic) {
+            if (!extension_loaded('imagick')) {
+                throw new Exception("HEIC/HEIF files require ImageMagick extension");
+            }
+            return $this->loadImageMagick($path);
+        } else {
+            // Use GD for JPEG/PNG (faster)
+            $image = $this->loadImageGD($path);
+            if ($image !== false) {
+                return $image;
+            }
+            
+            // Fallback to ImageMagick if GD fails
+            if (extension_loaded('imagick')) {
+                return $this->loadImageMagick($path);
+            }
+        }
+        
+        return false;
     }
 
     /**
-     * Load HEIC/HEIF images using ImageMagick
+     * Load image using ImageMagick
      * 
-     * Converts HEIC format to JPEG using ImageMagick, then creates
-     * a GD resource from the converted data.
-     * 
-     * @param string $path Path to HEIC file
-     * @return resource|false GD image resource or false on failure
+     * @param string $path Path to image file
+     * @return Imagick|false Imagick object or false on failure
      */
-    private function loadHeic($path) {
+    private function loadImageMagick($path) {
         if (!extension_loaded('imagick')) {
-            throw new Exception("Imagick extension not available for HEIC processing");
+            return false;
         }
         
         try {
             $imagick = new Imagick();
             $imagick->readImage($path);
-            $imagick->setImageFormat('jpeg');
-            $blob = $imagick->getImageBlob();
-            return imagecreatefromstring($blob);
+            
+            // Convert to RGB colorspace for consistency
+            $imagick->setImageColorspace(Imagick::COLORSPACE_RGB);
+            
+            return $imagick;
         } catch (ImagickException $e) {
-            error_log("HEIC processing error: " . $e->getMessage());
+            error_log("ImageMagick failed for $path: " . $e->getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Load image using GD
+     * 
+     * @param string $path Path to image file
+     * @return resource|false GD image resource or false on failure
+     */
+    private function loadImageGD($path) {
+        $mime = mime_content_type($path);
+        
+        switch ($mime) {
+            case 'image/jpeg':
+                return imagecreatefromjpeg($path);
+            case 'image/png':
+                $img = imagecreatefrompng($path);
+                if ($img !== false) {
+                    imagealphablending($img, true);
+                    imagesavealpha($img, true);
+                }
+                return $img;
+            case 'image/heic':
+            case 'image/heif':
+                error_log("HEIC/HEIF files require ImageMagick");
+                return false;
+            default:
+                return false;
         }
     }
 
@@ -341,22 +404,42 @@ class ImageProcessor {
     /**
      * Apply EXIF orientation correction to image
      * 
-     * Rotates the image based on EXIF orientation data to ensure
-     * proper display orientation in web browsers.
+     * Handles both ImageMagick and GD image resources.
      * 
-     * @param resource $image GD image resource
+     * @param resource|Imagick $image Image resource or Imagick object
      * @param array $exif EXIF data array
-     * @return resource Oriented image resource
+     * @return resource|Imagick Oriented image resource/object
      */
     private function applyOrientation($image, $exif) {
         $orientation = $exif['Orientation'] ?? $exif['exif:Orientation'] ?? null;
-        if ($orientation) {
-            switch (intval($orientation)) {
-                case 3: $image = imagerotate($image, 180, 0); break;  // 180°
-                case 6: $image = imagerotate($image, -90, 0); break;  // 90° CW
-                case 8: $image = imagerotate($image, 90, 0); break;   // 90° CCW
+        
+        if (!$orientation) {
+            return $image;
+        }
+        
+        $orientationInt = intval($orientation);
+        
+        if ($image instanceof Imagick) {
+            // Check if autoOrientImage() method exists to avoid fatal errors.
+            if (method_exists($image, 'autoOrientImage')) {
+                $image->autoOrientImage();
+            } else {
+                // Manual orientation as a fallback for older Imagick versions.
+                switch ($orientationInt) {
+                    case 3: $image->rotateImage(new ImagickPixel('transparent'), 180); break;
+                    case 6: $image->rotateImage(new ImagickPixel('transparent'), 90); break;
+                    case 8: $image->rotateImage(new ImagickPixel('transparent'), -90); break;
+                }
+            }
+        } else {
+            // GD orientation handling
+            switch ($orientationInt) {
+                case 3: $image = imagerotate($image, 180, 0); break;
+                case 6: $image = imagerotate($image, -90, 0); break;
+                case 8: $image = imagerotate($image, 90, 0); break;
             }
         }
+        
         return $image;
     }
 
@@ -365,53 +448,138 @@ class ImageProcessor {
      * 
      * Creates a square thumbnail by cropping the center of the image
      * and resizing to THUMB_WIDTH x THUMB_WIDTH pixels.
+     * Handles both ImageMagick and GD resources.
      * 
-     * @param resource $image Source GD image resource
+     * @param resource|Imagick $image Image resource or Imagick object
      * @param string $destBase Destination directory base path
      * @param string $filename Base filename
      */
     private function createThumbnail($image, $destBase, $filename) {
-        $width = imagesx($image);
-        $height = imagesy($image);
-        $minDim = min($width, $height);
-    
-        // Calculate crop box (center square) and cast to int
-        $src_x = (int)(($width - $minDim) / 2);
-        $src_y = (int)(($height - $minDim) / 2);
-        $minDim = (int)$minDim;
-    
-        // Create square thumbnail
-        $thumb = imagecreatetruecolor(THUMB_WIDTH, THUMB_WIDTH);
-        imagecopyresampled(
-            $thumb, $image,
-            0, 0,                           // Destination position
-            $src_x, $src_y,                 // Source crop position
-            THUMB_WIDTH, THUMB_WIDTH,       // Destination size
-            $minDim, $minDim                // Source crop size
-        );
+        $thumbnailPath = $destBase . 'thumbs/' . $filename . '.jpg';
         
-        // Save thumbnail
-        imagejpeg($thumb, $destBase . 'thumbs/' . $filename . '.jpg', THUMB_QUALITY);
-        imagedestroy($thumb);
+        if ($image instanceof Imagick) {
+            // ImageMagick processing
+            $thumb = clone $image;
+            
+            // Get dimensions
+            $width = $thumb->getImageWidth();
+            $height = $thumb->getImageHeight();
+            $minDim = min($width, $height);
+            
+            // Calculate crop box (center square) - ROUND values to the nearest int
+            $src_x = (int) round(($width - $minDim) / 2);
+            $src_y = (int) round(($height - $minDim) / 2);
+            
+            // Crop to square
+            $thumb->cropImage($minDim, $minDim, $src_x, $src_y);
+            
+            // Resize to thumbnail size
+            $thumb->resizeImage(THUMB_WIDTH, THUMB_WIDTH, Imagick::FILTER_LANCZOS, 1);
+            
+            // Set format and quality
+            $thumb->setImageFormat('jpeg');
+            $thumb->setImageCompressionQuality(THUMB_QUALITY);
+            
+            // Save
+            $thumb->writeImage($thumbnailPath);
+            $thumb->destroy();
+            
+        } else {
+            // GD processing
+            $width = imagesx($image);
+            $height = imagesy($image);
+            $minDim = min($width, $height);
+            
+            // Calculate crop box (center square) and cast to int
+            $src_x = (int)(($width - $minDim) / 2);
+            $src_y = (int)(($height - $minDim) / 2);
+            $minDim = (int)$minDim;
+            
+            // Create square thumbnail
+            $thumb = imagecreatetruecolor(THUMB_WIDTH, THUMB_WIDTH);
+            imagecopyresampled(
+                $thumb, $image,
+                0, 0,                           // Destination position
+                $src_x, $src_y,                 // Source crop position
+                THUMB_WIDTH, THUMB_WIDTH,       // Destination size
+                $minDim, $minDim                // Source crop size
+            );
+            
+            // Save thumbnail
+            imagejpeg($thumb, $thumbnailPath, THUMB_QUALITY);
+            imagedestroy($thumb);
+        }
     }
 
     /**
      * Create preview image
      * 
-     * Creates a web-optimized preview image scaled to PREVIEW_WIDTH
-     * while maintaining aspect ratio.
+     * Creates a web-optimized preview image scaled to PREVIEW_SIZE
+     * on the longest dimension while maintaining aspect ratio.
+     * Handles both ImageMagick and GD resources.
      * 
-     * @param resource $image Source GD image resource
+     * @param resource|Imagick $image Image resource or Imagick object
      * @param string $destBase Destination directory base path
      * @param string $filename Base filename
      */
     private function createPreview($image, $destBase, $filename) {
-        // Scale image maintaining aspect ratio
-        $preview = imagescale($image, PREVIEW_WIDTH);
+        $previewPath = $destBase . 'previews/' . $filename . '.jpg';
         
-        // Save preview
-        imagejpeg($preview, $destBase . 'previews/' . $filename . '.jpg', PREVIEW_QUALITY);
-        imagedestroy($preview);
+        if ($image instanceof Imagick) {
+            // ImageMagick processing
+            $preview = clone $image;
+            
+            // Get dimensions
+            $width = $preview->getImageWidth();
+            $height = $preview->getImageHeight();
+            
+            // Calculate new dimensions based on longest side
+            if ($width > $height) {
+                // Landscape: scale by width
+                $preview->resizeImage(PREVIEW_SIZE, 0, Imagick::FILTER_LANCZOS, 1);
+            } else {
+                // Portrait or square: scale by height
+                $preview->resizeImage(0, PREVIEW_SIZE, Imagick::FILTER_LANCZOS, 1);
+            }
+            
+            // Set format and quality
+            $preview->setImageFormat('jpeg');
+            $preview->setImageCompressionQuality(PREVIEW_QUALITY);
+            
+            // Save
+            $preview->writeImage($previewPath);
+            $preview->destroy();
+            
+        } else {
+            // GD processing
+            $width = imagesx($image);
+            $height = imagesy($image);
+            
+            // Calculate new dimensions based on longest side
+            if ($width > $height) {
+                // Landscape: scale by width
+                $newWidth = PREVIEW_SIZE;
+                $newHeight = (int) round(($height / $width) * PREVIEW_SIZE);
+            } else {
+                // Portrait or square: scale by height
+                $newHeight = PREVIEW_SIZE;
+                $newWidth = (int) round(($width / $height) * PREVIEW_SIZE);
+            }
+            
+            // Create preview image using imagecopyresampled for better quality
+            $preview = imagecreatetruecolor($newWidth, $newHeight);
+            imagecopyresampled(
+                $preview, $image,
+                0, 0,                           // Destination position
+                0, 0,                           // Source position
+                $newWidth, $newHeight,          // Destination size
+                $width, $height                 // Source size
+            );
+            
+            // Save preview
+            imagejpeg($preview, $previewPath, PREVIEW_QUALITY);
+            imagedestroy($preview);
+        }
     }
 }
 
