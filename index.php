@@ -387,10 +387,11 @@ function render_year_index() {
                      <img src="<?= htmlspecialchars($thumb_src) ?>" class="month-thumbnail" alt="">
                  </a>
                  <?php endif; ?>
-                <h2><a href="<?= htmlspecialchars($base . $year) ?>"><?= htmlspecialchars($year) ?></a></h2>
                 <?php $months = get_months_in_year($year); ?>
                 <?php if(!empty($months)): ?>
-                    <p><?= count($months) ?> months</p>
+                    <h2 class="year-title"><a href="<?= htmlspecialchars($base . $year) ?>"><?= htmlspecialchars($year) ?></a> <span class="count"><?= count($months) ?> albums</span></h2>
+                <?php else: ?>
+                    <h2 class="year-title"><a href="<?= htmlspecialchars($base . $year) ?>"><?= htmlspecialchars($year) ?></a></h2>
                 <?php endif; ?>
             </div>
         <?php endforeach; ?>
@@ -420,12 +421,12 @@ function render_month_index($year) {
                      <img src="<?= htmlspecialchars($thumb_src) ?>" class="month-thumbnail" alt="">
                  </a>
                  <?php endif; ?>
-                 <h3>
+                 <h3 class="month-title">
                      <a href="<?= htmlspecialchars($base . $year . '/' . $month_name) ?>">
                          <?= htmlspecialchars($month_name) ?>
                      </a>
+                     <span class="count"><?= $data['count'] ?> photos</span>
                  </h3>
-                <p><?= $data['count'] ?> photos</p>
             </div>
         <?php endforeach; ?>
     </div>

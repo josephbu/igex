@@ -51,7 +51,7 @@ body {
 }
 
 .month-card {
-    padding: 1rem;
+    padding: 0.75rem;
     border: 1px solid #333333;
     border-radius: 8px;
     background: #1e1e1e;
@@ -64,16 +64,35 @@ body {
     aspect-ratio: 1 / 1;
     object-fit: cover;
     border-radius: 4px;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     background: #222;
     display: block;
-    max-width: 300px; /* optional: prevents huge thumbnails on big screens */
-    height: auto;     /* let aspect-ratio control the height */
+    max-width: 300px;
+    height: auto;
 }
 
-.month-card h3 {
-    margin: 0.5em 0;
+.year-title {
+    margin: 0;
+    font-size: 1.1rem;
     color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.month-title {
+    margin: 0;
+    font-size: 1rem;
+    color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.count {
+    font-size: 0.85rem;
+    color: #bbbbbb;
+    font-weight: normal;
 }
 
 h1, h2, h3 {
