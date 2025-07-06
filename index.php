@@ -380,11 +380,7 @@ function render_year_index() {
                  <?php endif; ?>
                 <?php $months = get_months_in_year($year); ?>
                 <div class="overlay-text">
-                    <?php if(!empty($months)): ?>
-                        <h2 class="year-title"><a href="<?= htmlspecialchars($base . $year) ?>"><?= htmlspecialchars($year)                 ?> - <?= count($months) ?> albums</a></h2>
-                    <?php else: ?>
-                        <h2 class="year-title"><a href="<?= htmlspecialchars($base . $year) ?>"><?= htmlspecialchars($year)                 ?></a></h2>
-                    <?php endif; ?>
+                        <h2 class="year-title"><a href="<?= htmlspecialchars($base . $year) ?>"><?= htmlspecialchars($year) ?></a></h2>
                 </div>
             </div>
         <?php endforeach; ?>
@@ -417,7 +413,7 @@ function render_month_index($year) {
                  <div class="overlay-text">
                      <h3 class="month-title">
                          <a href="<?= htmlspecialchars($base . $year . '/' . $month_name) ?>">
-                             <?= htmlspecialchars($month_name) ?> <?= htmlspecialchars($year) ?> - <?= $data['count'] ?> photos
+                             <?= htmlspecialchars($month_name) ?> <?= htmlspecialchars($year) ?>
                          </a>
                      </h3>
                  </div>
