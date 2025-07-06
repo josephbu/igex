@@ -2,7 +2,7 @@
 
 A lightweight, self-hosted PHP photo gallery that automatically organizes your images by year and month. Perfect for photographers and anyone who wants a clean, simple way to showcase their photo collections online.
 
-## 🌟 Features
+## Features
 
 - **Automatic Organization**: Organizes photos by year/month structure
 - **Multiple Format Support**: JPEG, PNG, HEIC/HEIF compatibility
@@ -14,7 +14,7 @@ A lightweight, self-hosted PHP photo gallery that automatically organizes your i
 - **Dual Themes**: Dark and light theme options
 - **Fast Loading**: Optimized thumbnails and progressive image loading
 
-## 📸 Screenshot Preview
+## Screenshot Preview
 
 The gallery displays photos in a clean grid layout with:
 - Year/month navigation structure
@@ -22,7 +22,7 @@ The gallery displays photos in a clean grid layout with:
 - Individual photo pages with full metadata
 - Breadcrumb navigation
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Requirements
 
@@ -89,7 +89,7 @@ The gallery displays photos in a clean grid layout with:
 7. **Access Your Gallery**
    Visit your website - the gallery will be available at your domain root or subdirectory.
 
-## ⚙️ Configuration Options
+## Configuration Options
 
 ### Basic Settings (`config.php`)
 
@@ -106,18 +106,18 @@ The gallery displays photos in a clean grid layout with:
 | Setting | Description | Default |
 |---------|-------------|---------|
 | `THUMB_WIDTH` | Thumbnail size (square) | 400px |
-| `PREVIEW_WIDTH` | Preview image max width | 1200px |
+| `PREVIEW_SIZE` | Preview image max size (longest dimension) | 1200px |
 | `THUMB_QUALITY` | Thumbnail JPEG quality (1-100) | 85 |
 | `PREVIEW_QUALITY` | Preview JPEG quality (1-100) | 90 |
 
-## 🔄 Image Processing
+## Image Processing
 
 The `processor.php` script handles:
 
 - **Thumbnail Generation**: Square thumbnails for grid display
 - **Preview Creation**: Web-optimized full-size previews
 - **EXIF Extraction**: Camera metadata, settings, and timestamps
-- **Format Conversion**: Converts HEIC/HEIF to web-compatible JPEG
+- **Format Conversion**: Converts HEIC/HEIF to web-compatible JPEG (Requires ImageMagick)
 - **Orientation Correction**: Automatically rotates images based on EXIF data
 
 ### Processing New Images
@@ -146,7 +146,7 @@ photos/
 
 Photos can be removed from the `originals/` directory once the processor has been run. This can help save space in your web hosting as you don't need to keep a copy of the originals. Obviously don't delete them from your normal photo storage location on NAS in triplicate ;-)
 
-## 🎨 Customization
+## Customization
 
 ### Themes
 
@@ -165,21 +165,21 @@ Modify the CSS files in the `css/` directory to customize appearance:
 - `css/dark.css` - Dark theme styles
 - `css/light.css` - Light theme styles
 
-## 🔒 Security Features
+## Security Features
 
 - **Password Protection**: Optional gallery-wide password
 - **File Type Validation**: Only processes allowed image formats
 - **Directory Protection**: Prevents direct access to sensitive files
 - **Session Management**: Secure login handling
 
-## 📱 Mobile Support
+## Mobile Support
 
 - Responsive grid layout adapts to screen size
 - Touch-friendly navigation
 - Optimized image loading for mobile connections
 - Retina display support with 2x thumbnail resolution
 
-## 🌐 URL Structure
+## URL Structure
 
 Clean, SEO-friendly URLs:
 - `/` - Gallery home (year index)
@@ -187,7 +187,7 @@ Clean, SEO-friendly URLs:
 - `/2024/January` - January 2024 photos
 - `/2024/January/photo-name` - Individual photo view
 
-## 🛠️ Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -197,7 +197,7 @@ Clean, SEO-friendly URLs:
 - Run `php processor.php` to generate thumbnails
 
 **HEIC files not processing:**
-- Install ImageMagick: `sudo apt-get install php-imagick`
+- Install ImageMagick: `sudo apt-get install php-imagick` or `pecl install imagick`
 - Verify installation: `php -m | grep -i imagick`
 
 **URLs not working:**
@@ -209,7 +209,7 @@ Clean, SEO-friendly URLs:
 - Increase PHP memory limit in `php.ini`: `memory_limit = 512M`
 - Process images in smaller batches
 
-## 📋 Requirements
+## Requirements
 
 ### Minimum Requirements
 - PHP 8.4+
@@ -222,23 +222,24 @@ Clean, SEO-friendly URLs:
 - At least 512MB PHP memory limit
 - SSD storage for better performance
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit pull requests or open issues for bugs and feature requests.
 
-## 📄 License
+## License
 
-This project is open source. Feel free to use, and modify according to your needs.
+This project is open source and licensed under GNU General Public License v3.0.
 
-## 🙋‍♂️ Support
+## Support
 
 If you encounter any issues or have questions:
 1. Check the troubleshooting section above
-2. Review your web server error logs
+2. Check your web server error logs
 3. Open an issue on GitHub with details about your setup
 
 ---
 
 **Image Gallery EXpress** - Simple, fast, and elegant photo galleries for everyone.
 
+https://github.com/josephbu/igex.git
 
