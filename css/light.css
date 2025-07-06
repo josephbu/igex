@@ -31,8 +31,8 @@ body {
 }
 
 .breadcrumb {
-    padding: 1rem;
-    font-size: 1.8rem;
+    padding: 0.5rem 1rem;
+    font-size: 1.2rem;
     color: #666;
 }
 
@@ -47,18 +47,16 @@ body {
 
 .month-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
     padding: 1rem;
 }
 
 .month-card {
-    padding: 0.75rem;
-    border: 1px solid #ddd;
+    position: relative;
     border-radius: 8px;
-    background: #fff;
-    color: #333;
     overflow: hidden;
+    background: #fff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
@@ -66,36 +64,60 @@ body {
     width: 100%;
     aspect-ratio: 1 / 1;
     object-fit: cover;
-    border-radius: 4px;
-    margin-bottom: 0.75rem;
-    background: #f0f0f0;
     display: block;
-    max-width: 300px;
-    height: auto;
+    background: #f0f0f0;
+}
+
+.overlay-text {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    padding: 2rem 0.75rem 0.75rem;
+    margin: 0;
+    text-align: center;
+    /* Add these properties to prevent unwanted wrapping */
+    white-space: nowrap; /* Prevent wrapping entirely */
+    overflow: hidden; /* Hide any overflow */
+    text-overflow: ellipsis; /* Add ellipsis if text is too long */
 }
 
 .year-title {
     margin: 0;
-    font-size: 1.1rem;
-    color: #222;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    font-size: 1rem;
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    font-weight: normal;
+    /* Ensure the link doesn't break the nowrap */
+    display: block;
+    white-space: inherit;
 }
 
 .month-title {
     margin: 0;
-    font-size: 1rem;
-    color: #222;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    font-size: 0.9rem;
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    font-weight: normal;
+    /* Ensure the link doesn't break the nowrap */
+    display: block;
+    white-space: inherit;
 }
 
-.count {
-    font-size: 0.85rem;
-    color: #666;
-    font-weight: normal;
+.year-title a,
+.month-title a {
+    color: #ffffff;
+    text-decoration: none;
+    /* Make sure links don't break the text flow */
+    display: inline-block;
+    width: 100%;
+    white-space: inherit;
+}
+
+.year-title a:hover,
+.month-title a:hover {
+    color: #90caf9;
 }
 
 h1, h2, h3 {

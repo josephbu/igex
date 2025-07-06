@@ -96,15 +96,6 @@ function get_base_path() {
 }
 
 /**
- * Convert month number to full month name
- * @param int $num Month number (1-12)
- * @return string Full month name (e.g., "January")
- */
-function get_month_name($num) {
-    return date('F', mktime(0, 0, 0, $num, 1));
-}
-
-/**
  * Calculate the web-accessible path to the photo root directory
  * Handles complex path resolution between filesystem and web paths
  * Uses static caching to avoid recalculation on multiple calls
@@ -388,11 +379,13 @@ function render_year_index() {
                  </a>
                  <?php endif; ?>
                 <?php $months = get_months_in_year($year); ?>
-                <?php if(!empty($months)): ?>
-                    <h2 class="year-title"><a href="<?= htmlspecialchars($base . $year) ?>"><?= htmlspecialchars($year) ?></a> <span class="count"><?= count($months) ?> albums</span></h2>
-                <?php else: ?>
-                    <h2 class="year-title"><a href="<?= htmlspecialchars($base . $year) ?>"><?= htmlspecialchars($year) ?></a></h2>
-                <?php endif; ?>
+                <div class="overlay-text">
+                    <?php if(!empty($months)): ?>
+                        <h2 class="year-title"><a href="<?= htmlspecialchars($base . $year) ?>"><?= htmlspecialchars($year)                 ?> - <?= count($months) ?> albums</a></h2>
+                    <?php else: ?>
+                        <h2 class="year-title"><a href="<?= htmlspecialchars($base . $year) ?>"><?= htmlspecialchars($year)                 ?></a></h2>
+                    <?php endif; ?>
+                </div>
             </div>
         <?php endforeach; ?>
     </div>
@@ -421,12 +414,13 @@ function render_month_index($year) {
                      <img src="<?= htmlspecialchars($thumb_src) ?>" class="month-thumbnail" alt="">
                  </a>
                  <?php endif; ?>
-                 <h3 class="month-title">
-                     <a href="<?= htmlspecialchars($base . $year . '/' . $month_name) ?>">
-                         <?= htmlspecialchars($month_name) ?>
-                     </a>
-                     <span class="count"><?= $data['count'] ?> photos</span>
-                 </h3>
+                 <div class="overlay-text">
+                     <h3 class="month-title">
+                         <a href="<?= htmlspecialchars($base . $year . '/' . $month_name) ?>">
+                             <?= htmlspecialchars($month_name) ?> <?= htmlspecialchars($year) ?> - <?= $data['count'] ?> photos
+                         </a>
+                     </h3>
+                 </div>
             </div>
         <?php endforeach; ?>
     </div>
