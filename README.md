@@ -228,7 +228,7 @@ Contributions are welcome! Please feel free to submit pull requests or open issu
 
 ## License
 
-This project is open source and licensed under GNU General Public License v3.0.
+This project is open source and licensed under AGPL-3.0 license.
 
 ## Support
 
