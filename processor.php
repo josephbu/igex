@@ -220,7 +220,6 @@ class ImageProcessor {
         
         // Get shutter speed from EXIF - PHP uses ExposureTime field
         $shutterSpeed = $getValue('ExposureTime');
-        error_log("Debug shutter speed for $filename: " . var_export($shutterSpeed, true));
         
         $fnumber = $getValue('FNumber');
         $iso = $getValue('ISOSpeedRatings') ?? $getValue('ISO') ?? $getValue('PhotographicSensitivity');
