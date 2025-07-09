@@ -216,12 +216,18 @@ class ImageProcessor {
         $datetime = $getValue('DateTimeOriginal') ?? $getValue('DateTime') ?? date('Y:m:d H:i:s', filemtime($source));
         $make = $getValue('Make');
         $model = $getValue('Model');
-        $lens = $getValue('LensModel') ?? $getValue('UndefinedTag:0xA434');
         $exposure = $getValue('ExposureTime');
-        $shutterSpeed = $getValue('ShutterSpeedValue');
+        
+        // Get shutter speed from EXIF - PHP uses ExposureTime field
+        $shutterSpeed = $getValue('ExposureTime');
+        error_log("Debug shutter speed for $filename: " . var_export($shutterSpeed, true));
+        
         $fnumber = $getValue('FNumber');
         $iso = $getValue('ISOSpeedRatings') ?? $getValue('ISO') ?? $getValue('PhotographicSensitivity');
-        $focalLength = $getValue('FocalLength');
+        
+        // Handle focal length - try the 35mm format first, then regular focal length
+        $focalLength35mm = $getValue('FocalLengthIn35mmFilm') ?? $getValue('FocalLengthIn35mmFormat');
+        $focalLength = $focalLength35mm ?? $getValue('FocalLength');
     
         // Clean up camera model - remove manufacturer prefix if present
         $camera = $model ?? '';
@@ -234,9 +240,8 @@ class ImageProcessor {
         $metadata = [
             'datetime' => $datetime,
             'camera' => $camera,
-            'lens' => $lens,
             'exposure' => $this->safeRound($exposure),
-            'shutter_speed' => $this->safeRound($shutterSpeed),
+            'shutter_speed' => $shutterSpeed, // Use raw value directly
             'fnumber' => $this->safeRound($fnumber, 1),
             'iso' => $this->safeRound($iso),
             'focal_length' => $focalLength ? $this->safeRound($focalLength) . 'mm' : null

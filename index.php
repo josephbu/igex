@@ -478,11 +478,12 @@ function render_image_view($year, $month_name, $image) {
     $date_taken = !empty($metadata['datetime']) ? 
         date('F j, Y H:i', strtotime($metadata['datetime'])) : 'Unknown';
     
-    // Handle exposure/shutter speed formatting (convert decimals to fractions)
+    // Handle exposure speed formatting (convert decimals to fractions)
     $exposure = !empty($metadata['exposure']) ?
         ((float)$metadata['exposure'] < 1 ? '1/' . round(1/(float)$metadata['exposure']) : $metadata['exposure']) : '';
-    $shutter_speed = !empty($metadata['shutter_speed']) ?
-        ((float)$metadata['shutter_speed'] < 1 ? '1/' . round(1/(float)$metadata['shutter_speed']) : $metadata['shutter_speed']) : '';
+
+    // Shutter speed is now pre-formatted, use as-is
+    $shutter_speed = $metadata['shutter_speed'] ?? '';
     
     // Format camera settings for display
     $fnumber = !empty($metadata['fnumber']) ? 'ƒ/' . $metadata['fnumber'] : '';
@@ -521,11 +522,11 @@ function render_image_view($year, $month_name, $image) {
                 <span class="metadata-value"><?= htmlspecialchars($camera) ?></span>
             </div>
             <?php endif; ?>
-            <?php if($focal || $exposure || $shutter_speed || $fnumber || $iso): ?>
+            <?php if($focal || $exposure || $fnumber || $shutter_speed || $iso): ?>
             <div class="metadata-item">
                 <span class="metadata-label">Settings</span>
                 <span class="metadata-value">
-                    <?= htmlspecialchars(trim("$focal $exposure $fnumber $iso")) ?>
+                    <?= htmlspecialchars(trim("$focal $exposure $fnumber $shutter_speed $iso")) ?>
                 </span>
             </div>
             <?php endif; ?>
