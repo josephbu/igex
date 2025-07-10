@@ -8,14 +8,14 @@
  * 
  * Expected directory structure:
  * - originals/YYYY/MM/filename.ext (source images)
- * - photos/YYYY/MM/thumbs/filename.jpg (square thumbnails)
- * - photos/YYYY/MM/previews/filename.jpg (scaled previews)
+ * - photos/YYYY/MM/thumbs/filename.webp (or .jpg) (square thumbnails)
+ * - photos/YYYY/MM/previews/filename.webp (or .jpg) (scaled previews)
  * - photos/YYYY/MM/meta/filename.json (EXIF metadata)
  * 
  * Supported formats: JPEG, PNG, HEIC/HEIF
  * 
  * @author JB
- * @version 0.1
+ * @version 0.2
  */
 
 require_once 'config.php';
@@ -459,7 +459,10 @@ class ImageProcessor {
      * @param string $filename Base filename
      */
     private function createThumbnail($image, $destBase, $filename) {
-        $thumbnailPath = $destBase . 'thumbs/' . $filename . '.jpg';
+        // Get format from config, default to jpg
+        $format = defined('IMAGE_FORMAT') ? strtolower(IMAGE_FORMAT) : 'jpg';
+        $ext = ($format === 'webp') ? 'webp' : 'jpg';
+        $thumbnailPath = $destBase . 'thumbs/' . $filename . '.' . $ext;
         
         if ($image instanceof Imagick) {
             // ImageMagick processing
@@ -481,7 +484,7 @@ class ImageProcessor {
             $thumb->resizeImage(THUMB_WIDTH, THUMB_WIDTH, Imagick::FILTER_LANCZOS, 1);
             
             // Set format and quality
-            $thumb->setImageFormat('jpeg');
+            $thumb->setImageFormat($format);
             $thumb->setImageCompressionQuality(THUMB_QUALITY);
             
             // Save
@@ -509,8 +512,12 @@ class ImageProcessor {
                 $minDim, $minDim                // Source crop size
             );
             
-            // Save thumbnail
-            imagejpeg($thumb, $thumbnailPath, THUMB_QUALITY);
+            // Save thumbnail in the chosen format
+            if ($format === 'webp') {
+                imagewebp($thumb, $thumbnailPath, THUMB_QUALITY);
+            } else {
+                imagejpeg($thumb, $thumbnailPath, THUMB_QUALITY);
+            }
             imagedestroy($thumb);
         }
     }
@@ -527,7 +534,10 @@ class ImageProcessor {
      * @param string $filename Base filename
      */
     private function createPreview($image, $destBase, $filename) {
-        $previewPath = $destBase . 'previews/' . $filename . '.jpg';
+        // Get format from config, default to jpg
+        $format = defined('IMAGE_FORMAT') ? strtolower(IMAGE_FORMAT) : 'jpg';
+        $ext = ($format === 'webp') ? 'webp' : 'jpg';
+        $previewPath = $destBase . 'previews/' . $filename . '.' . $ext;
         
         if ($image instanceof Imagick) {
             // ImageMagick processing
@@ -547,7 +557,7 @@ class ImageProcessor {
             }
             
             // Set format and quality
-            $preview->setImageFormat('jpeg');
+            $preview->setImageFormat($format);
             $preview->setImageCompressionQuality(PREVIEW_QUALITY);
             
             // Save
@@ -580,8 +590,12 @@ class ImageProcessor {
                 $width, $height                 // Source size
             );
             
-            // Save preview
-            imagejpeg($preview, $previewPath, PREVIEW_QUALITY);
+            // Save preview in the chosen format
+            if ($format === 'webp') {
+                imagewebp($preview, $previewPath, PREVIEW_QUALITY);
+            } else {
+                imagejpeg($preview, $previewPath, PREVIEW_QUALITY);
+            }
             imagedestroy($preview);
         }
     }
