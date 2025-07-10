@@ -7,7 +7,7 @@ A lightweight, self-hosted PHP photo gallery that automatically organizes your i
 - **Automatic Organization**: Organizes photos by year/month structure
 - **Multiple Format Support**: JPEG, PNG, HEIC/HEIF compatibility
 - **Automatic Processing**: Generates thumbnails, previews, and extracts EXIF metadata
-- **WebP Support: Generates smaller, faster-loading images to save disk and improve performance
+- **WebP Support**: Generates smaller, faster-loading images to save disk and improve performance
 - **Responsive Design**: Works beautifully on desktop and mobile devices
 - **Password Protection**: Optional gallery-wide password protection
 - **SEO-Friendly URLs**: Clean URL structure (`/2024/January/photo-name`)
@@ -110,8 +110,8 @@ The gallery displays photos in a clean grid layout with:
 | `PREVIEW_SIZE` | Preview image max size (longest dimension) | 1200px |
 | `THUMB_QUALITY` | Thumbnail quality for WebP/JPEG (1-100) | 85 |
 | `PREVIEW_QUALITY` | Preview quality for WebP/JPEG (1-100) | 90 |
-| `IMAGE_FORMAT` | Format for thumbnails/previews. 'webp' or 'jpg' | 'webp' |
-| `IMAGE_PROCESSOR` | Image processing engine. 'auto' (uses GD for JPG/PNG, ImageMagick for HEIC), 'imagemagick', or 'gd'. | 'auto' |
+| `IMAGE_FORMAT` | Format for thumbnails/previews. 'webp' or 'jpg' | webp |
+| `IMAGE_PROCESSOR` | Image processing engine. 'auto' (uses GD for JPG/PNG, ImageMagick for HEIC), 'imagemagick', or 'gd'. | auto |
 
 ## Image Processing
 
