@@ -7,6 +7,7 @@ A lightweight, self-hosted PHP photo gallery that automatically organizes your i
 - **Automatic Organization**: Organizes photos by year/month structure
 - **Multiple Format Support**: JPEG, PNG, HEIC/HEIF compatibility
 - **Automatic Processing**: Generates thumbnails, previews, and extracts EXIF metadata
+- **WebP Support: Generates smaller, faster-loading images to save disk and improve performance
 - **Responsive Design**: Works beautifully on desktop and mobile devices
 - **Password Protection**: Optional gallery-wide password protection
 - **SEO-Friendly URLs**: Clean URL structure (`/2024/January/photo-name`)
@@ -107,8 +108,10 @@ The gallery displays photos in a clean grid layout with:
 |---------|-------------|---------|
 | `THUMB_WIDTH` | Thumbnail size (square) | 400px |
 | `PREVIEW_SIZE` | Preview image max size (longest dimension) | 1200px |
-| `THUMB_QUALITY` | Thumbnail JPEG quality (1-100) | 85 |
-| `PREVIEW_QUALITY` | Preview JPEG quality (1-100) | 90 |
+| `THUMB_QUALITY` | Thumbnail quality for WebP/JPEG (1-100) | 85 |
+| `PREVIEW_QUALITY` | Preview quality for WebP/JPEG (1-100) | 90 |
+| `IMAGE_FORMAT` | Format for thumbnails/previews. 'webp' or 'jpg' | 'webp' |
+| `IMAGE_PROCESSOR` | Image processing engine. 'auto' (uses GD for JPG/PNG, ImageMagick for HEIC), 'imagemagick', or 'gd'. | 'auto' |
 
 ## Image Processing
 
@@ -134,11 +137,11 @@ photos/
 └── 2024/
     └── 01/
         ├── thumbs/
-        │   ├── IMG_001.jpg    # Square thumbnails
-        │   └── IMG_002.jpg
+        │   ├── IMG_001.webp   # Square thumbnails
+        │   └── IMG_002.webp
         ├── previews/
-        │   ├── IMG_001.jpg    # Full-size previews
-        │   └── IMG_002.jpg
+        │   ├── IMG_001.webp   # Full-size previews
+        │   └── IMG_002.webp
         └── meta/
             ├── IMG_001.json   # EXIF metadata
             └── IMG_002.json
@@ -195,10 +198,12 @@ Clean, SEO-friendly URLs:
 - Check file permissions on `photos/` directory
 - Ensure GD extension is installed: `php -m | grep -i gd`
 - Run `php processor.php` to generate thumbnails
+- Try different settings for `IMAGE_FORMAT` and `IMAGE_PROCESSOR`
 
 **HEIC files not processing:**
 - Install ImageMagick: `sudo apt-get install php-imagick` or `pecl install imagick`
 - Verify installation: `php -m | grep -i imagick`
+- Set `IMAGE_PROCESSOR` to `imagemagick` or `auto` in `config.php`.
 
 **URLs not working:**
 - Ensure `.htaccess` exists
