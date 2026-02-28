@@ -336,6 +336,8 @@ function render_lightbox_container() {
 
             var items = [];
             var currentIndex = -1;
+            var touchStartX = 0;
+            var touchStartY = 0;
 
             function collectItems() {
                 items = [];
@@ -400,6 +402,32 @@ function render_lightbox_container() {
                     close();
                 }
             });
+
+            // Basic touch swipe support for mobile (left/right to navigate)
+            overlay.addEventListener('touchstart', function (e) {
+                if (!overlay.classList.contains('igex-lightbox--open')) return;
+                if (!e.touches || e.touches.length === 0) return;
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+
+            overlay.addEventListener('touchend', function (e) {
+                if (!overlay.classList.contains('igex-lightbox--open')) return;
+                if (!e.changedTouches || e.changedTouches.length === 0) return;
+                var touchEndX = e.changedTouches[0].clientX;
+                var touchEndY = e.changedTouches[0].clientY;
+                var dx = touchEndX - touchStartX;
+                var dy = touchEndY - touchStartY;
+
+                // Horizontal swipe with sufficient distance and dominance over vertical movement
+                if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+                    if (dx < 0) {
+                        showNext(1); // swipe left -> next
+                    } else {
+                        showNext(-1); // swipe right -> previous
+                    }
+                }
+            }, { passive: true });
 
             document.addEventListener('keydown', function (e) {
                 if (!overlay.classList.contains('igex-lightbox--open')) return;
