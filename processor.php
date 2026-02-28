@@ -137,16 +137,19 @@ class ImageProcessor {
     /**
      * Clean up image resources
      * 
-     * Properly destroys both ImageMagick and GD resources
+     * Properly destroys ImageMagick resources and lets PHP GC handle GD images.
+     * In PHP 8.0+, GD images are objects and imagedestroy() is a no-op
+     * (deprecated as of PHP 8.5), so we avoid calling it.
      * 
-     * @param resource|Imagick $image Image resource or Imagick object
+     * @param resource|Imagick|GdImage $image Image resource or Imagick/GD object
      */
     private function destroyImage($image) {
         if ($image instanceof Imagick) {
             $image->destroy();
-        } else {
-            imagedestroy($image);
+            return;
         }
+        // For GD images, rely on garbage collection instead of imagedestroy()
+        return;
     }
 
     /**
@@ -518,7 +521,6 @@ class ImageProcessor {
             } else {
                 imagejpeg($thumb, $thumbnailPath, THUMB_QUALITY);
             }
-            imagedestroy($thumb);
         }
     }
 
@@ -596,7 +598,6 @@ class ImageProcessor {
             } else {
                 imagejpeg($preview, $previewPath, PREVIEW_QUALITY);
             }
-            imagedestroy($preview);
         }
     }
 }
