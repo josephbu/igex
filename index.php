@@ -640,6 +640,8 @@ function render_image_view($year, $month_name, $image) {
     $positionLabel = '';
     $prevLink = null;
     $nextLink = null;
+    $prevPreview = null;
+    $nextPreview = null;
 
     if ($currentIndex !== false) {
         $humanIndex = $currentIndex + 1;
@@ -648,10 +650,12 @@ function render_image_view($year, $month_name, $image) {
         if ($currentIndex > 0) {
             $prevSlug = $images[$currentIndex - 1];
             $prevLink = $base . $year . '/' . $month_name . '/' . $prevSlug;
+            $prevPreview = $web_path . "/$year/$month_num/previews/" . $prevSlug . "." . $ext;
         }
         if ($currentIndex < $totalImages - 1) {
             $nextSlug = $images[$currentIndex + 1];
             $nextLink = $base . $year . '/' . $month_name . '/' . $nextSlug;
+            $nextPreview = $web_path . "/$year/$month_num/previews/" . $nextSlug . "." . $ext;
         }
     }
     
@@ -677,6 +681,10 @@ function render_image_view($year, $month_name, $image) {
     $iso = !empty($metadata['iso']) ? 'ISO ' . $metadata['iso'] : '';
     $focal = $metadata['focal_length'] ?? '';
     $camera = $metadata['camera'] ?? '';
+    // Detail strip configuration
+    $stripPosition = defined('DETAIL_STRIP_POSITION') ? DETAIL_STRIP_POSITION : 'bottom';
+    $stripPosition = in_array($stripPosition, ['top', 'bottom', 'off'], true) ? $stripPosition : 'bottom';
+    $showStrip = $totalImages > 1 && $stripPosition !== 'off';
     ob_start(); ?>
     <!DOCTYPE html>
     <html lang="en">
@@ -684,12 +692,22 @@ function render_image_view($year, $month_name, $image) {
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title><?= htmlspecialchars($page_title) ?></title>
         <?= gallery_styles() ?>
+        <?php if ($prevPreview): ?>
+            <link rel="preload" as="image" href="<?= htmlspecialchars($prevPreview) ?>">
+        <?php endif; ?>
+        <?php if ($nextPreview): ?>
+            <link rel="preload" as="image" href="<?= htmlspecialchars($nextPreview) ?>">
+        <?php endif; ?>
         <style>
             body { text-align: center; }
             img { max-width: 95vw; max-height: 80vh; margin: 2rem auto; border-radius: 8px; box-shadow: 0 2px 8px #0002; }
             .image-nav { display:flex; justify-content:space-between; align-items:center; max-width:900px; margin:0 auto 1rem; padding:0 1rem; font-size:0.95rem; }
             .image-nav a { text-decoration:none; }
             .image-position { opacity:0.8; }
+            .detail-strip { max-width: 1000px; margin: 0.5rem auto 2rem; padding: 0 0.75rem; display:flex; gap:0.4rem; overflow-x:auto; }
+            .detail-strip-thumb { display:block; flex:0 0 auto; border-radius:6px; overflow:hidden; border:2px solid transparent; opacity:0.7; }
+            .detail-strip-thumb img { display:block; width:72px; height:72px; object-fit:cover; }
+            .detail-strip-thumb.is-current { border-color:#64b5f6; opacity:1; }
         </style>
     </head>
     <body>
@@ -717,7 +735,33 @@ function render_image_view($year, $month_name, $image) {
             </div>
         </div>
         <?php endif; ?>
+        <?php if ($showStrip && $stripPosition === 'top'): ?>
+        <div class="detail-strip" aria-label="Other photos in this month">
+            <?php foreach ($images as $idx => $slug): 
+                $thumbUrl = $web_path . "/$year/$month_num/thumbs/" . $slug . "." . $ext;
+                $linkUrl = $base . $year . '/' . $month_name . '/' . $slug;
+                $isCurrent = ($idx === $currentIndex);
+            ?>
+                <a href="<?= htmlspecialchars($linkUrl) ?>" class="detail-strip-thumb<?= $isCurrent ? ' is-current' : '' ?>">
+                    <img src="<?= htmlspecialchars($thumbUrl) ?>" loading="lazy" alt="">
+                </a>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
         <img src="<?= htmlspecialchars($preview) ?>" alt="">
+        <?php if ($showStrip && $stripPosition === 'bottom'): ?>
+        <div class="detail-strip" aria-label="Other photos in this month">
+            <?php foreach ($images as $idx => $slug): 
+                $thumbUrl = $web_path . "/$year/$month_num/thumbs/" . $slug . "." . $ext;
+                $linkUrl = $base . $year . '/' . $month_name . '/' . $slug;
+                $isCurrent = ($idx === $currentIndex);
+            ?>
+                <a href="<?= htmlspecialchars($linkUrl) ?>" class="detail-strip-thumb<?= $isCurrent ? ' is-current' : '' ?>">
+                    <img src="<?= htmlspecialchars($thumbUrl) ?>" loading="lazy" alt="">
+                </a>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
         <div class="metadata-grid">
             <div class="metadata-item">
                 <span class="metadata-label">Date Taken</span>

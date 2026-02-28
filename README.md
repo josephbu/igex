@@ -14,6 +14,9 @@ A lightweight, self-hosted PHP photo gallery that automatically organizes your i
 - **EXIF Metadata Display**: Shows camera settings, date taken, and equipment info
 - **Dual Themes**: Dark and light theme options
 - **Fast Loading**: Optimized thumbnails and progressive image loading
+- **Interactive Image View**: Full-screen lightbox for viewing photos without leaving the gallery
+- **Keyboard & Touch Navigation**: Use arrow keys, on-screen arrows, or swipe on mobile to move between photos
+- **Thumbnail Strip Navigation**: Quickly jump between photos in a month using a thumbnail strip on the image detail page
 
 ## Screenshot Preview
 
@@ -101,6 +104,7 @@ The gallery displays photos in a clean grid layout with:
 | `GALLERY_THEME` | Theme: 'dark' or 'light' | 'dark' |
 | `GALLERY_PASSWORD` | Optional password protection | Not set |
 | `ALLOWED_TYPES` | Supported file extensions | jpg, jpeg, png, heic, heif |
+| `DETAIL_STRIP_POSITION` | Position of thumbnail strip on image detail page. `'top'` (above image), `'bottom'` (below image), or `'off'` (disabled). | top |
 
 ### Advanced Settings
 
@@ -167,6 +171,23 @@ define('GALLERY_THEME', 'dark'); // or 'light'
 Modify the CSS files in the `css/` directory to customize appearance:
 - `css/dark.css` - Dark theme styles
 - `css/light.css` - Light theme styles
+
+## Image View Experience
+
+When you click a photo thumbnail in a month view, IGEX opens a full-screen lightbox:
+
+- **Lightbox Overlay**: Shows a larger, web-optimized preview of the image
+- **Navigation Controls**:
+  - On-screen **Previous / Next** arrows
+  - **Keyboard**: Left/Right arrow keys to move between photos
+  - **Mobile**: Swipe left/right on the image to navigate
+- **Details Link**: “View details” opens the full image detail page with EXIF metadata and breadcrumbs
+
+On the individual image detail page:
+
+- A **thumbnail strip** shows all photos from the same month
+- The **current photo is highlighted**
+- Clicking any thumbnail jumps directly to that photo’s detail page
 
 ## Security Features
 

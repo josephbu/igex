@@ -5,6 +5,8 @@ define('GALLERY_TITLE', 'IGEX Gallery');
 define('GALLERY_THEME', 'dark'); // dark or light
 //define('GALLERY_PASSWORD', 'password'); // Uncomment and update if needed
 define('ALLOWED_TYPES', ['jpg', 'jpeg', 'png', 'heic', 'heif']);
+// Detail strip position on image view: 'top', 'bottom', or 'off'
+define('DETAIL_STRIP_POSITION', 'top');
 // Generally don't need to touch these
 define('THUMB_WIDTH', 400); // 2x for retina/high-DPI screens
 define('PREVIEW_SIZE', 1200); // Applied to longest dimension (width or height)
