@@ -156,3 +156,78 @@ a:hover {
 .metadata-value {
     color: #e0e0e0;
 }
+
+.igex-lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1.5rem;
+}
+
+.igex-lightbox--open {
+    display: flex;
+}
+
+.igex-lightbox__inner {
+    position: relative;
+    max-width: 95vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.igex-lightbox__image {
+    max-width: 100%;
+    max-height: 80vh;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+.igex-lightbox__caption {
+    margin-top: 0.75rem;
+    text-align: center;
+    color: #e0e0e0;
+    font-size: 0.95rem;
+}
+
+.igex-lightbox__details-link {
+    display: inline-block;
+    margin-left: 0.5rem;
+    color: #64b5f6;
+}
+
+.igex-lightbox__close {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.75rem;
+    background: transparent;
+    border: none;
+    color: #e0e0e0;
+    font-size: 2rem;
+    cursor: pointer;
+}
+
+.igex-lightbox__nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    color: #e0e0e0;
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+}
+
+.igex-lightbox__nav--prev {
+    left: 1.5rem;
+}
+
+.igex-lightbox__nav--next {
+    right: 1.5rem;
+}

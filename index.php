@@ -301,6 +301,123 @@ HTML;
 }
 
 /**
+ * Render lightbox container and JavaScript for full-screen image viewing
+ *
+ * Output is included on gallery pages and progressively enhances
+ * month galleries without breaking direct image links.
+ *
+ * @return string
+ */
+function render_lightbox_container() {
+    ob_start(); ?>
+    <div id="igex-lightbox" class="igex-lightbox" aria-hidden="true">
+        <button type="button" class="igex-lightbox__close" aria-label="Close">&times;</button>
+        <button type="button" class="igex-lightbox__nav igex-lightbox__nav--prev" aria-label="Previous photo">&#10094;</button>
+        <button type="button" class="igex-lightbox__nav igex-lightbox__nav--next" aria-label="Next photo">&#10095;</button>
+        <div class="igex-lightbox__inner">
+            <img src="" alt="" class="igex-lightbox__image">
+            <div class="igex-lightbox__caption">
+                <span class="igex-lightbox__caption-text"></span>
+                <a href="#" class="igex-lightbox__details-link">View details</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function () {
+            var overlay = document.getElementById('igex-lightbox');
+            if (!overlay) return;
+
+            var imgEl = overlay.querySelector('.igex-lightbox__image');
+            var captionEl = overlay.querySelector('.igex-lightbox__caption-text');
+            var detailsLinkEl = overlay.querySelector('.igex-lightbox__details-link');
+            var closeBtn = overlay.querySelector('.igex-lightbox__close');
+            var prevBtn = overlay.querySelector('.igex-lightbox__nav--prev');
+            var nextBtn = overlay.querySelector('.igex-lightbox__nav--next');
+
+            var items = [];
+            var currentIndex = -1;
+
+            function collectItems() {
+                items = [];
+                var links = document.querySelectorAll('.gallery a.gallery-item');
+                links.forEach(function (link, index) {
+                    var preview = link.getAttribute('data-preview') || link.querySelector('img')?.src;
+                    var caption = link.getAttribute('data-caption') || link.querySelector('img')?.alt || '';
+                    items.push({
+                        link: link,
+                        href: link.getAttribute('href'),
+                        preview: preview,
+                        caption: caption
+                    });
+                    link.dataset.igexIndex = String(index);
+                });
+            }
+
+            function openAt(index) {
+                if (!items.length || index < 0 || index >= items.length) return;
+                currentIndex = index;
+                var item = items[index];
+                overlay.setAttribute('aria-hidden', 'false');
+                overlay.classList.add('igex-lightbox--open');
+                imgEl.src = item.preview;
+                imgEl.alt = item.caption;
+                captionEl.textContent = item.caption;
+                detailsLinkEl.href = item.href;
+                document.body.style.overflow = 'hidden';
+            }
+
+            function close() {
+                overlay.setAttribute('aria-hidden', 'true');
+                overlay.classList.remove('igex-lightbox--open');
+                imgEl.src = '';
+                document.body.style.overflow = '';
+                currentIndex = -1;
+            }
+
+            function showNext(delta) {
+                if (currentIndex === -1) return;
+                var nextIndex = currentIndex + delta;
+                if (nextIndex < 0 || nextIndex >= items.length) return;
+                openAt(nextIndex);
+            }
+
+            document.addEventListener('click', function (e) {
+                var link = e.target.closest('.gallery a.gallery-item');
+                if (!link) return;
+                collectItems();
+                var idx = parseInt(link.dataset.igexIndex || '-1', 10);
+                if (isNaN(idx) || idx < 0) return;
+                e.preventDefault();
+                openAt(idx);
+            });
+
+            closeBtn.addEventListener('click', function () { close(); });
+            prevBtn.addEventListener('click', function () { showNext(-1); });
+            nextBtn.addEventListener('click', function () { showNext(1); });
+
+            overlay.addEventListener('click', function (e) {
+                if (e.target === overlay) {
+                    close();
+                }
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (!overlay.classList.contains('igex-lightbox--open')) return;
+                if (e.key === 'Escape') {
+                    close();
+                } else if (e.key === 'ArrowLeft') {
+                    showNext(-1);
+                } else if (e.key === 'ArrowRight') {
+                    showNext(1);
+                }
+            });
+        })();
+    </script>
+    <?php
+    return ob_get_clean();
+}
+
+/**
  * Render the main gallery page structure
  * Generates complete HTML document with head, body, and footer
  * @param string|null $year 4-digit year or null for year index
@@ -330,6 +447,7 @@ function render_gallery($year = null, $month_name = null) {
     <body>
         <?= render_breadcrumb($year, $month_name) ?>
         <?= render_content($year, $month_name) ?>
+        <?= render_lightbox_container() ?>
         <?= render_footer() ?>
     </body>
     </html>
@@ -451,11 +569,17 @@ function render_month_gallery($year, $month_name) {
     <div class="gallery">
         <?php foreach($images as $img):
             $web_path = photo_root_web_path();
-            $thumb = $web_path . "/$year/$month_num/thumbs/" . pathinfo($img, PATHINFO_FILENAME) . "." . $ext;
-            $image_link = $base . $year . '/' . $month_name . '/' . pathinfo($img, PATHINFO_FILENAME);
+            $slug = pathinfo($img, PATHINFO_FILENAME);
+            $thumb = $web_path . "/$year/$month_num/thumbs/" . $slug . "." . $ext;
+            $preview = $web_path . "/$year/$month_num/previews/" . $slug . "." . $ext;
+            $image_link = $base . $year . '/' . $month_name . '/' . $slug;
+            $caption = str_replace(['-', '_'], ' ', $slug);
         ?>
-            <a href="<?= htmlspecialchars($image_link) ?>">
-                <img src="<?= htmlspecialchars($thumb) ?>" loading="lazy" alt="">
+            <a href="<?= htmlspecialchars($image_link) ?>"
+               class="gallery-item"
+               data-preview="<?= htmlspecialchars($preview) ?>"
+               data-caption="<?= htmlspecialchars($caption) ?>">
+                <img src="<?= htmlspecialchars($thumb) ?>" loading="lazy" alt="<?= htmlspecialchars($caption) ?>">
             </a>
         <?php endforeach; ?>
     </div>
@@ -480,6 +604,28 @@ function render_image_view($year, $month_name, $image) {
     $web_path = photo_root_web_path();
     $preview = $web_path . "/$year/$month_num/previews/" . pathinfo($image, PATHINFO_FILENAME) . "." . $ext;
     $back_link = $base . $year . '/' . $month_name;
+    
+    // Determine previous/next images within this month for navigation
+    $images = get_images($year, $month_num);
+    $currentIndex = array_search($image, $images, true);
+    $totalImages = count($images);
+    $positionLabel = '';
+    $prevLink = null;
+    $nextLink = null;
+
+    if ($currentIndex !== false) {
+        $humanIndex = $currentIndex + 1;
+        $positionLabel = "Photo $humanIndex of $totalImages";
+
+        if ($currentIndex > 0) {
+            $prevSlug = $images[$currentIndex - 1];
+            $prevLink = $base . $year . '/' . $month_name . '/' . $prevSlug;
+        }
+        if ($currentIndex < $totalImages - 1) {
+            $nextSlug = $images[$currentIndex + 1];
+            $nextLink = $base . $year . '/' . $month_name . '/' . $nextSlug;
+        }
+    }
     
     // Get configurable gallery title from config, with fallback
     $gallery_title = defined('GALLERY_TITLE') ? GALLERY_TITLE : 'Photo Gallery';
@@ -513,6 +659,9 @@ function render_image_view($year, $month_name, $image) {
         <style>
             body { text-align: center; }
             img { max-width: 95vw; max-height: 80vh; margin: 2rem auto; border-radius: 8px; box-shadow: 0 2px 8px #0002; }
+            .image-nav { display:flex; justify-content:space-between; align-items:center; max-width:900px; margin:0 auto 1rem; padding:0 1rem; font-size:0.95rem; }
+            .image-nav a { text-decoration:none; }
+            .image-position { opacity:0.8; }
         </style>
     </head>
     <body>
@@ -523,6 +672,23 @@ function render_image_view($year, $month_name, $image) {
             <?= htmlspecialchars($image) ?>
         </div>
         <p><a href="<?= htmlspecialchars($back_link) ?>">&larr; Back to Month</a></p>
+        <?php if ($prevLink || $nextLink || $positionLabel): ?>
+        <div class="image-nav">
+            <div>
+                <?php if ($prevLink): ?>
+                    <a href="<?= htmlspecialchars($prevLink) ?>">&larr; Previous</a>
+                <?php endif; ?>
+            </div>
+            <div class="image-position">
+                <?= htmlspecialchars($positionLabel) ?>
+            </div>
+            <div>
+                <?php if ($nextLink): ?>
+                    <a href="<?= htmlspecialchars($nextLink) ?>">Next &rarr;</a>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
         <img src="<?= htmlspecialchars($preview) ?>" alt="">
         <div class="metadata-grid">
             <div class="metadata-item">
@@ -544,6 +710,21 @@ function render_image_view($year, $month_name, $image) {
             </div>
             <?php endif; ?>
         </div>
+        <?php if ($prevLink || $nextLink): ?>
+        <script>
+            (function() {
+                var prevUrl = <?= $prevLink ? json_encode($prevLink) : 'null' ?>;
+                var nextUrl = <?= $nextLink ? json_encode($nextLink) : 'null' ?>;
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'ArrowLeft' && prevUrl) {
+                        window.location.href = prevUrl;
+                    } else if (e.key === 'ArrowRight' && nextUrl) {
+                        window.location.href = nextUrl;
+                    }
+                });
+            })();
+        </script>
+        <?php endif; ?>
     </body>
     </html>
     <?php
